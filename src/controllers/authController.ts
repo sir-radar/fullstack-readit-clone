@@ -17,7 +17,7 @@ const register = async(req: Request, res:Response) => {
         await user.save();
         return res.json(user);
     }catch(err){
-        //TODO: Handle duplicaye user error properly
+        //TODO: Handle duplicate user error properly
         console.log(err);
         return res.status(500).json(err);
     }
