@@ -5,5 +5,6 @@ const router = Router()
 
 router.post('/create', authMiddleware, postController.create);
 router.get('/', postController.getPosts);
+router.get('/:identifier/:slug', postController.getPost);
 
 export default router;
