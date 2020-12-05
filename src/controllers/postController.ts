@@ -15,7 +15,7 @@ const create = async(req: Request, res:Response) => {
     }
 
     try {
-        const subRecord = await Sub.findOneOrFail({name: sub})
+        const subRecord = await Sub.findOneOrFail({name: sub});
 
         const post = new Post({title, body, user, sub: subRecord});
         await post.save();
@@ -26,6 +26,19 @@ const create = async(req: Request, res:Response) => {
     }
 };
 
+const getPosts = async(req: Request, res:Response) => {
+    try{
+        const posts = await Post.find()
+
+        return res.json(posts)
+
+    }catch(err){
+        console.log(err)
+        return res.json({error: 'Something went wrong'})
+    }
+}
 
 
-export default{ create }
+
+
+export default{ create, getPosts }
