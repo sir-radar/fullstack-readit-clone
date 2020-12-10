@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {isEmpty, validate} from "class-validator";
 import { Post } from "../entities/Post";
 import { Sub } from "../entities/Sub";
+import { Comment } from "../entities/Comment";
 
 
 const create = async(req: Request, res:Response) => {
@@ -43,9 +44,34 @@ const getPosts = async(_: Request, res:Response) => {
 const getPost = async(req: Request, res:Response) => {
     const {identifier, slug} = req.params
     try{
-        const post = await Post.findOneOrFail({identifier, slug})
+        const post = await Post.findOneOrFail(
+            {identifier, slug},
+            {relations: ['sub']}
+            )
 
         return res.json(post)
+
+    }catch(err){
+        console.log(err)
+        return res.status(404).json({error: 'Post not found'})
+    }
+}
+
+const commentOnPost = async(req: Request, res:Response) => {
+    const {identifier, slug} = req.params
+    const body = req.body.body
+    try{
+        const post = await Post.findOneOrFail({identifier, slug})
+
+        const comment = new Comment({
+            body,
+            user: res.locals.user,
+            post
+        })
+
+        await comment.save()
+
+        return res.json(comment)
 
     }catch(err){
         console.log(err)
@@ -56,4 +82,4 @@ const getPost = async(req: Request, res:Response) => {
 
 
 
-export default{ create, getPosts, getPost }
+export default{ create, getPosts, getPost, commentOnPost }

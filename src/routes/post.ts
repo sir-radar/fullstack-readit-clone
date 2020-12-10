@@ -6,5 +6,6 @@ const router = Router()
 router.post('/create', authMiddleware, postController.create);
 router.get('/', postController.getPosts);
 router.get('/:identifier/:slug', postController.getPost);
+router.post('/:identifier/:slug/comments',authMiddleware, postController.commentOnPost);
 
 export default router;
