@@ -5,6 +5,13 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cookie  from "cookie";
 
+const mapErrors = (errors: Object[]) => {
+    return errors.reduce((prev: any, err: any) => {
+        prev[err.property] = Object.entries(err.constraints)[0][1]
+        return prev;
+    }, {} )
+}
+
 
 const register = async(req: Request, res:Response) => {
 
@@ -13,12 +20,15 @@ const register = async(req: Request, res:Response) => {
     try {
         const user = new User({email, username, password});
         const errors = await validate(user);
-        if(errors.length > 0) return res.status(400).json(errors);
+        if(errors.length > 0) {
+            return res.status(400).json(mapErrors(errors));
+        }
         await user.save();
         return res.json(user);
     }catch(err){
-        //TODO: Handle duplicate user error properly
-        console.log(err);
+        if(err.code == 23505){
+            return res.status(409).json({message: "Email or Username already taken"});
+        }
         return res.status(500).json(err);
     }
 };
