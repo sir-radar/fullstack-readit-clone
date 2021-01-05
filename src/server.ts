@@ -3,7 +3,8 @@ import {createConnection} from "typeorm";
 import express from 'express';
 import morgan from "morgan";
 import dotenv  from "dotenv";
-import cookieParser  from "cookie-parser"
+import cookieParser  from "cookie-parser";
+import cors from 'cors';
 
 dotenv.config();
 
@@ -22,6 +23,11 @@ app.use(express.json())
 app.use(morgan('dev'))
 app.use(trim)
 app.use(cookieParser())
+app.use(cors({
+    credentials: true,
+    origin: process.env.ORIGIN,
+    optionsSuccessStatus: 200,
+}))
 
 app.get('/', (req, res) => res.send("Hello world"));
 app.use('/api/auth', authRoutes)

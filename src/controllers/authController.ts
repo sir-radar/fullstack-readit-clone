@@ -47,12 +47,12 @@ const login = async(req: Request, res:Response) => {
 
         const user = await User.findOne({username});
 
-        if(!user) return res.status(404).json({error: 'User not found'})
+        if(!user) return res.status(404).json({username: 'User not found'})
 
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if(!passwordMatch){
-            return res.status(401).json({error: "Username and password doesn't match"})
+            return res.status(401).json({password: "Username and password doesn't match"})
         }
 
         const token = jwt.sign({username}, process.env.JWT_SECRET);
