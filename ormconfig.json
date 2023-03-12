@@ -1,9 +1,9 @@
 {
    "type": "postgres",
    "host": "localhost",
-   "port": 5432,
-   "username": "sirradar",
-   "password": "1122",
+   "port": 5434,
+   "username": "postgres",
+   "password": "123",
    "database": "readit",
    "synchronize": false,
    "logging": true,
@@ -16,9 +16,13 @@
    "subscribers": [
       "src/subscribers/**/*.ts"
    ],
+   "seeds": [
+      "src/seeds/**/*{.ts,.js}'"
+   ],
    "cli": {
       "entitiesDir": "src/entities",
       "migrationsDir": "src/migrations",
-      "subscribersDir": "src/subscribers"
+      "subscribersDir": "src/subscribers",
+      "seedsDir": "src/seeds"
    }
 }
