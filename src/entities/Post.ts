@@ -4,6 +4,7 @@ import { User } from './User';
 import {makeId, slugify} from '../utils/helpers';
 import { Sub } from "./Sub";
 import { Comment } from "./Comment";
+import { Vote } from "./Vote";
 
 @TOEntity("posts")
 export class Post extends  Entity{
@@ -42,6 +43,9 @@ export class Post extends  Entity{
 
     @OneToMany(() => Comment, comment => comment.post)
     comments: Comment
+
+    @OneToMany(() => Vote, vote => vote.comment)
+    votes: Vote[]
 
     protected url: string
     @AfterLoad()

@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import {isEmpty, validate} from "class-validator";
 import { Post } from "../entities/Post";
 import { Sub } from "../entities/Sub";
 import { Comment } from "../entities/Comment";
