@@ -1,12 +1,13 @@
-module.exports = {
-    webpack(config) {
-        config.module.rules.push({
-            test: /\.svg$/,
-            issuer: {
-                test: /\.(js|ts)x?$/,
-            },
-            use: ['@svgr/webpack']
-        });
-        return config
-    },
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  webpack: (config) => {
+    if (!config.experiments) {
+      config.experiments = {};
+    }
+    config.experiments.topLevelAwait = true;
+    return config;
+  },
 };
+
+module.exports = nextConfig;
