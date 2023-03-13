@@ -33,7 +33,9 @@ app.use(
   })
 );
 
-app.get('/', (req, res) => res.send('Hello world'));
+app.use(express.static('public'));
+
+app.get('/api', (req, res) => res.send('Hello world'));
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/subs', subRoutes);

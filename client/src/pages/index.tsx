@@ -1,101 +1,150 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { Fragment, useEffect, useState } from 'react';
-import axios from 'axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { Post } from '../types';
+import useSWR from 'swr';
+import useSWRInfinite from 'swr/infinite';
+import Image from 'next/image';
+
+import { Post, Sub } from '../models/types';
+
+import PostCard from '../components/PostCard';
+import Link from 'next/link';
+import { useAuthState } from '../context/auth';
 
 dayjs.extend(relativeTime);
 
 export default function Home() {
-  const [posts, setPost] = useState<Post[]>([]);
+  const [observedPost, setObservedPost] = useState('');
+
+  // const { data: posts } = useSWR<Post[]>('/posts')
+  const { data: topSubs } = useSWR<Sub[]>('/misc/top-subs');
+
+  const description =
+    "Reddit is a network of communities based on people's interests. Find communities you're interested in, and become part of an online community!";
+  const title = 'readit: the front page of the internet';
+
+  const { authenticated } = useAuthState();
+
+  const {
+    data,
+    error,
+    size: page,
+    setSize: setPage,
+    isValidating,
+    revalidate,
+  } = useSWRInfinite<Post[]>((index) => `/posts?page=${index}`);
+
+  const isInitialLoading = !data && !error;
+  const posts: Post[] = data ? [].concat(...data) : [];
+
   useEffect(() => {
-    axios
-      .get('/posts')
-      .then((res) => setPost(res.data))
-      .catch((err) => console.log(err));
-  }, []);
+    if (!posts || posts.length === 0) return;
+
+    const id = posts[posts.length - 1].identifier;
+
+    if (id !== observedPost) {
+      setObservedPost(id);
+      observeElement(document.getElementById(id)!);
+    }
+  }, [posts]);
+
+  const observeElement = (element: HTMLElement) => {
+    if (!element) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting === true) {
+          console.log('Reached bottom of post');
+          setPage(page + 1);
+          observer.unobserve(element);
+        }
+      },
+      { threshold: 1 }
+    );
+    observer.observe(element);
+  };
+
   return (
-    <div className="pt-12">
+    <Fragment>
       <Head>
-        <title>Readit: the front page of the internet</title>
+        <title>{title}</title>
+        <meta name="description" content={description}></meta>
+        <meta property="og:description" content={description} />
+        <meta property="og:title" content={title} />
+        <meta property="twitter:description" content={description} />
+        <meta property="twitter:title" content={title} />
       </Head>
       <div className="container flex pt-4">
-        <div className="w-160">
-          {posts.map((post) => (
-            <div key={post.identifier} className="flex mb-4 bg-white rounded">
-              <div className="w-10 text-center bg-gray-200 rounded-l">
-                <p>V</p>
-              </div>
-              <div className="w-full p-2">
-                <div className="flex items-center">
-                  <Link href={`/r/${post.subName}`}>
-                    <Fragment>
-                      <img
-                        src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&f=y"
-                        className="w-6 h-6 mr-1 rounded-full cursor-pointer"
-                      />
-                      <span className="text-xs font-bold cursor-pointer hover:underline">
-                        /r/{post.subName}
-                      </span>
-                    </Fragment>
-                  </Link>
-                  <p className="text-xs text-gray-500">
-                    <span className="mx-1">•</span>
-                    Posted by
-                    <Link href={`/u/${post.username}`}>
-                      <span className="mx-1 hover:underline">
-                        /u/{post.username}
-                      </span>
-                    </Link>
-                    <Link href={post.url}>
-                      <span className="mx-1 hover:underline">
-                        {dayjs(post.createdAt).fromNow()}
-                      </span>
-                    </Link>
-                  </p>
-                </div>
-                <Link href={post.url}>
-                  <span className="my-1 text-lg font-medium">{post.title}</span>
-                </Link>
-                {post?.body && <p className="my-1 text-sm">{post.body}</p>}
-
-                <div className="flex">
-                  <Link href={post.url}>
+        {/* Posts feed */}
+        <div className="w-full px-4 md:w-160 md:p-0">
+          {isInitialLoading && <p className="text-lg text-center">Loading..</p>}
+          {posts?.map((post) => (
+            <PostCard
+              post={post}
+              key={post.identifier}
+              revalidate={revalidate}
+            />
+          ))}
+          {isValidating && posts.length > 0 && (
+            <p className="text-lg text-center">Loading More..</p>
+          )}
+        </div>
+        {/* Sidebar */}
+        <div className="hidden ml-6 md:block w-80">
+          <div className="bg-white rounded">
+            <div className="p-4 border-b-2">
+              <p className="text-lg font-semibold text-center">
+                Top Communities
+              </p>
+            </div>
+            <div>
+              {topSubs?.map((sub) => (
+                <div
+                  key={sub.name}
+                  className="flex items-center px-4 py-2 text-xs border-b"
+                >
+                  <Link href={`/r/${sub.name}`}>
                     <span>
-                      <div className="px-1 py-1 mr-1 text-xs text-gray-400 rounded cursor-pointer hover:bg-gray-200">
-                        <i className="mr-1 fas fa-comment-alt fa-xs"></i>
-                        <span className="font-bold">20 comments</span>
-                      </div>
+                      <Image
+                        src={sub.imageUrl}
+                        className="rounded-full cursor-pointer"
+                        alt="Sub"
+                        width={(6 * 16) / 4}
+                        height={(6 * 16) / 4}
+                      />
                     </span>
                   </Link>
-                  <div className="px-1 py-1 mr-1 text-xs text-gray-400 rounded cursor-pointer hover:bg-gray-200">
-                    <i className="mr-1 fas fa-share fa-xs"></i>
-                    <span className="font-bold">Share</span>
-                  </div>
-                  <div className="px-1 py-1 mr-1 text-xs text-gray-400 rounded cursor-pointer hover:bg-gray-200">
-                    <i className="mr-1 fas fa-bookmark fa-xs"></i>
-                    <span className="font-bold">Save</span>
-                  </div>
+                  <Link href={`/r/${sub.name}`}>
+                    <span className="ml-2 font-bold hover:cursor-pointer">
+                      /r/{sub.name}
+                    </span>
+                  </Link>
+                  <p className="ml-auto font-med">{sub.postCount}</p>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+            {authenticated && (
+              <div className="p-4 border-t-2">
+                <Link href="/subs/create">
+                  <span className="w-full px-2 py-1 blue button">
+                    Create Community
+                  </span>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Fragment>
   );
 }
 
-//server-side rendering
-
 // export const getServerSideProps: GetServerSideProps = async (context) => {
 //   try {
-//     const res = await axios.get('/posts')
+//     const res = await Axios.get('/posts')
 
-//     return { props: { posts: res.data }}
+//     return { props: { posts: res.data } }
 //   } catch (err) {
-//     return { props:{ error: 'Something went wrong'}}
+//     return { props: { error: 'Something went wrong' } }
 //   }
 // }
